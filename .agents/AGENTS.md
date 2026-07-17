@@ -12,21 +12,21 @@
   - `testcode/` ディレクトリ配下のすべてのファイルは編集禁止です。
   - ※ 統合作業時に一時的にAIに編集させたい場合は、このルールを一時的に外すか個別に指示してください。
 
-- **実行中のPCユーザー名が `user`（センサー担当）の場合**:
+- **実行中のPCユーザー名が `userrrr`（センサー担当）の場合**:
   - 担当外の以下のファイルはAIによる編集を禁止します（読み取りのみ可能）。
     - `magnetic_mapper/src/recorder.py`
     - `magnetic_mapper/src/visualizer.py`
     - `magnetic_mapper/main.py`
     - `testcode/` ディレクトリ配下のすべてのファイル
 
-- **実行中のPCユーザー名が `sato6`（データ記録担当）の場合**:
+- **実行中のPCユーザー名が `B`（データ記録担当）の場合**:
   - 担当外の以下のファイルはAIによる編集を禁止します（読み取りのみ可能）。
     - `magnetic_mapper/src/sensor.py`
     - `magnetic_mapper/src/visualizer.py`
     - `magnetic_mapper/main.py`
     - `testcode/` ディレクトリ配下のすべてのファイル
 
-- **実行中のPCユーザー名が `kentaro`（データ可視化担当）の場合**:
+- **実行中のPCユーザー名が `C`（データ可視化担当）の場合**:
   - 担当外の以下のファイルはAIによる編集を禁止します（読み取りのみ可能）。
     - `magnetic_mapper/src/sensor.py`
     - `magnetic_mapper/src/recorder.py`
