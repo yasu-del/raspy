@@ -16,6 +16,7 @@
   - 担当外の以下のファイルはAIによる編集を禁止します（読み取りのみ可能）。
     - `magnetic_mapper/src/recorder.py`
     - `magnetic_mapper/src/visualizer.py`
+    - `magnetic_mapper/src/tracker.py`
     - `magnetic_mapper/main.py`
     - `testcode/` ディレクトリ配下のすべてのファイル
 
@@ -23,6 +24,7 @@
   - 担当外の以下のファイルはAIによる編集を禁止します（読み取りのみ可能）。
     - `magnetic_mapper/src/sensor.py`
     - `magnetic_mapper/src/visualizer.py`
+    - `magnetic_mapper/src/tracker.py`
     - `magnetic_mapper/main.py`
     - `testcode/` ディレクトリ配下のすべてのファイル
 
@@ -30,6 +32,7 @@
   - 担当外の以下のファイルはAIによる編集を禁止します（読み取りのみ可能）。
     - `magnetic_mapper/src/sensor.py`
     - `magnetic_mapper/src/recorder.py`
+    - `magnetic_mapper/src/tracker.py`
     - `magnetic_mapper/main.py`
     - `testcode/` ディレクトリ配下のすべてのファイル
 
