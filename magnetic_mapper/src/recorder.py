@@ -22,9 +22,10 @@ class DataRecorder:
             writer = csv.writer(f)
             writer.writerow(['timestamp', 'pos_x', 'pos_y', 'pos_z', 'mag_x', 'mag_y', 'mag_z'])
 
-    def record(self, position, mag_vector):
+    def record(self, position, mag_vector, timestamp=None):
         """位置情報と磁束密度をバッファに記録し、一定数に達したらファイルへ追記する"""
-        timestamp = datetime.now().isoformat()
+        if timestamp is None:
+            timestamp = datetime.now().isoformat()
         row = [timestamp] + list(position) + list(mag_vector)
         self.buffer.append(row)
         
