@@ -1,35 +1,38 @@
 import sys
 import os
+import shutil
 
-# srcディレクトリをパスに追加
-sys.path.append(os.path.join(os.path.dirname(__file__), 'magnetic_mapper', 'src'))
+# スクリプトがあるディレクトリ（raspy直下）を取得
+repo_path = os.path.dirname(os.path.abspath(__file__))
+if repo_path not in sys.path:
+    sys.path.append(repo_path)
 
-from recorder import DataRecorder
+from magnetic_mapper.src.recorder import DataRecorder
 
-def test_recorder():
-    print("--- DataRecorder テスト開始 ---")
-    recorder = DataRecorder()
+def main():
+    data_dir = os.path.join(repo_path, "data")
+    if os.path.exists(data_dir):
+        shutil.rmtree(data_dir)
+        
+    print("Testing DataRecorder initialization...")
+    recorder = DataRecorder(buffer_size=2)
+    print(f"Data file initialized at: {recorder.filename}")
     
-    # ダミーデータを記録
-    print("ダミーデータを記録中...")
-    recorder.record(position=(1.0, 2.0, 3.0), mag_vector=(10.5, 20.5, 30.5))
-    recorder.record(position=(1.1, 2.1, 3.1), mag_vector=(11.5, 21.5, 31.5))
+    print("Writing 1st record...")
+    recorder.record([1.1, 2.2, 3.3], [10.1, 10.2, 10.3])
     
-    # CSVに保存
-    print("CSVファイルに保存中...")
-    recorder.save_to_csv()
+    print("Writing 2nd record (this should trigger flush)...")
+    recorder.record([4.4, 5.5, 6.6], [20.1, 20.2, 20.3])
     
-    # 保存されたか確認
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    expected_csv_path = os.path.join(base_dir, "data", "recorder.py.csv")
+    print("Writing 3rd record...")
+    recorder.record([7.7, 8.8, 9.9], [30.1, 30.2, 30.3])
     
-    if os.path.exists(expected_csv_path):
-        print(f"成功: ファイルが作成されました -> {expected_csv_path}")
-        with open(expected_csv_path, 'r') as f:
-            print("\n[ファイル内容]")
-            print(f.read())
-    else:
-        print("エラー: ファイルが作成されませんでした。")
+    print("Flushing manually...")
+    recorder.flush()
+    
+    print("\n--- Content of the CSV file ---")
+    with open(recorder.filename, 'r', encoding='utf-8') as f:
+        print(f.read())
 
 if __name__ == "__main__":
-    test_recorder()
+    main()
