@@ -1,6 +1,5 @@
 import sys
 import os
-import shutil
 
 # スクリプトがあるディレクトリ（raspy直下）を取得
 repo_path = os.path.dirname(os.path.abspath(__file__))
@@ -10,12 +9,12 @@ if repo_path not in sys.path:
 from magnetic_mapper.src.recorder import DataRecorder
 
 def main():
-    data_dir = os.path.join(repo_path, "data")
-    if os.path.exists(data_dir):
-        shutil.rmtree(data_dir)
-        
     print("Testing DataRecorder initialization...")
-    recorder = DataRecorder(buffer_size=2)
+    # 既存のファイルを削除せずに、新しいテスト用ファイル名を使用する
+    test_file = os.path.join(repo_path, "data", "test_recorded_data.csv")
+    
+    # バッファサイズ2で初期化
+    recorder = DataRecorder(filename=test_file, buffer_size=2)
     print(f"Data file initialized at: {recorder.filename}")
     
     print("Writing 1st record...")
