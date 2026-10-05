@@ -18,15 +18,22 @@ class DataRecorder:
         os.makedirs(os.path.dirname(self.filename), exist_ok=True)
         
         # 初期化時にファイルを新規作成し、ヘッダーを書き込む
-        with open(self.filename, mode='w', newline='') as f:
+        with open(self.filename, mode='w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
-            writer.writerow(['timestamp', 'pos_x', 'pos_y', 'pos_z', 'mag_x', 'mag_y', 'mag_z'])
+            writer.writerow(['r', 'c', 'bx', 'by', 'bz', 'b_total', 'timestamp'])
 
     def record(self, position, mag_vector, timestamp=None):
         """位置情報と磁束密度をバッファに記録し、一定数に達したらファイルへ追記する"""
         if timestamp is None:
             timestamp = datetime.now().isoformat()
-        row = [timestamp] + list(position) + list(mag_vector)
+            
+        import math
+        r = position[1] # pos_y
+        c = position[0] # pos_x
+        bx, by, bz = mag_vector[0], mag_vector[1], mag_vector[2]
+        b_total = math.sqrt(bx**2 + by**2 + bz**2)
+        
+        row = [r, c, bx, by, bz, b_total, timestamp]
         self.buffer.append(row)
         
         if len(self.buffer) >= self.buffer_size:
@@ -36,7 +43,7 @@ class DataRecorder:
         """バッファ内のデータをファイルに追記してバッファをクリアする"""
         if not self.buffer:
             return
-        with open(self.filename, mode='a', newline='') as f:
+        with open(self.filename, mode='a', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerows(self.buffer)
         self.buffer.clear()
