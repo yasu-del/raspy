@@ -79,7 +79,6 @@ class UnifiedMagneticVisualizer:
         # UIコントロール変数
         self.root = None
         self.mode_var = None
-        self.colormap_var = None
         self.autoscale_var = None
         self.vector_show_2d_var = None
         self.show_axes_3d_var = None
@@ -156,7 +155,6 @@ class UnifiedMagneticVisualizer:
         self.root.minsize(920, 600)
 
         self.mode_var = tk.StringVar(value="2D")
-        self.colormap_var = tk.StringVar(value="Viridis")
         self.autoscale_var = tk.BooleanVar(value=True)
         self.vector_show_2d_var = tk.BooleanVar(value=True)
         self.show_axes_3d_var = tk.BooleanVar(value=True)
@@ -231,32 +229,27 @@ class UnifiedMagneticVisualizer:
         # 3. 可視化設定
         color_card = ttk.Frame(left_panel, style="Card.TFrame", padding=12)
         color_card.pack(fill="x", pady=(0, 10))
-        ttk.Label(color_card, text="可視化・カラーマップ設定", style="Header.TLabel").grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 6))
-
-        ttk.Label(color_card, text="配色パターン:", style="Card.TLabel").grid(row=1, column=0, sticky="w", pady=3)
-        self.cmap_combo = ttk.Combobox(color_card, textvariable=self.colormap_var, values=["Viridis", "Modern Dark", "Rainbow", "Heat"], state="readonly", width=14)
-        self.cmap_combo.grid(row=1, column=1, sticky="e", pady=3)
-        self.cmap_combo.bind("<<ComboboxSelected>>", lambda e: self.redraw())
+        ttk.Label(color_card, text="可視化設定（Rainbow）", style="Header.TLabel").grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 6))
 
         self.chk_auto = tk.Checkbutton(color_card, text="オートスケール（自動調整）", variable=self.autoscale_var, command=self.redraw, bg=t["BG_CARD"])
-        self.chk_auto.grid(row=2, column=0, columnspan=2, sticky="w", pady=2)
+        self.chk_auto.grid(row=1, column=0, columnspan=2, sticky="w", pady=2)
 
         self.chk_vec2d = tk.Checkbutton(color_card, text="[2D] 磁気ベクトル（矢印）表示", variable=self.vector_show_2d_var, command=self.redraw, bg=t["BG_CARD"])
-        self.chk_vec2d.grid(row=3, column=0, columnspan=2, sticky="w", pady=2)
+        self.chk_vec2d.grid(row=2, column=0, columnspan=2, sticky="w", pady=2)
 
         self.chk_axes3d = tk.Checkbutton(color_card, text="[3D] XYZガイド軸を表示", variable=self.show_axes_3d_var, command=self.redraw, bg=t["BG_CARD"])
-        self.chk_axes3d.grid(row=4, column=0, columnspan=2, sticky="w", pady=2)
+        self.chk_axes3d.grid(row=3, column=0, columnspan=2, sticky="w", pady=2)
 
         self.slider_vecscale3d = ttk.Scale(color_card, from_=0.01, to=2.0, variable=self.vector_scale_3d_var, command=lambda _: self.redraw())
-        self.slider_vecscale3d.grid(row=5, column=0, columnspan=2, sticky="ew", pady=(3, 8))
+        self.slider_vecscale3d.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(3, 8))
 
-        ttk.Label(color_card, text="最小強度 (uT):", style="Card.TLabel").grid(row=6, column=0, sticky="w", pady=3)
+        ttk.Label(color_card, text="最小強度 (uT):", style="Card.TLabel").grid(row=5, column=0, sticky="w", pady=3)
         self.spin_min = tk.Spinbox(color_card, from_=0, to=1000, width=6, textvariable=self.min_ut_var, command=self.redraw)
-        self.spin_min.grid(row=6, column=1, sticky="e", pady=3)
+        self.spin_min.grid(row=5, column=1, sticky="e", pady=3)
 
-        ttk.Label(color_card, text="最大強度 (uT):", style="Card.TLabel").grid(row=7, column=0, sticky="w", pady=3)
+        ttk.Label(color_card, text="最大強度 (uT):", style="Card.TLabel").grid(row=6, column=0, sticky="w", pady=3)
         self.spin_max = tk.Spinbox(color_card, from_=1, to=10000, width=6, textvariable=self.max_ut_var, command=self.redraw)
-        self.spin_max.grid(row=7, column=1, sticky="e", pady=3)
+        self.spin_max.grid(row=6, column=1, sticky="e", pady=3)
 
         # 4. データ概要と選択情報
         self.stats_card = ttk.Frame(left_panel, style="Card.TFrame", padding=12)
@@ -316,33 +309,17 @@ class UnifiedMagneticVisualizer:
 
         v = 0.5 if max_val == min_val else (val - min_val) / (max_val - min_val)
         v = max(0.0, min(1.0, v))
-        cmap = self.colormap_var.get()
 
-        if cmap == "Viridis": stops = [(0.0, (68, 1, 84)), (0.33, (49, 104, 142)), (0.66, (53, 183, 121)), (1.0, (253, 231, 37))]
-        elif cmap == "Modern Dark": stops = [(0.0, (49, 18, 77)), (0.25, (0, 180, 216)), (0.5, (57, 255, 20)), (0.75, (255, 121, 0)), (1.0, (255, 0, 127))]
-        elif cmap == "Heat": stops = [(0.0, (20, 0, 30)), (0.33, (200, 20, 20)), (0.66, (255, 160, 0)), (1.0, (255, 255, 220))]
-        else:
-            h = 240.0 * (1.0 - v)
-            c = 0.95 * 0.85
-            x = c * (1.0 - abs((h / 60.0) % 2.0 - 1.0))
-            m = 0.95 - c
-            if 0 <= h < 60: r, g, b = c, x, 0
-            elif 60 <= h < 120: r, g, b = x, c, 0
-            elif 120 <= h < 180: r, g, b = 0, c, x
-            elif 180 <= h < 240: r, g, b = 0, x, c
-            else: r, g, b = c, 0, c
-            return f"#{int((r+m)*255):02x}{int((g+m)*255):02x}{int((b+m)*255):02x}"
-
-        for i in range(len(stops) - 1):
-            t1, c1 = stops[i]
-            t2, c2 = stops[i+1]
-            if t1 <= v <= t2:
-                ratio = (v - t1) / (t2 - t1) if t2 > t1 else 0.0
-                r = int(c1[0] + ratio * (c2[0] - c1[0]))
-                g = int(c1[1] + ratio * (c2[1] - c1[1]))
-                b = int(c1[2] + ratio * (c2[2] - c1[2]))
-                return f"#{r:02x}{g:02x}{b:02x}"
-        return f"#{stops[-1][1][0]:02x}{stops[-1][1][1]:02x}{stops[-1][1][2]:02x}"
+        h = 240.0 * (1.0 - v)
+        c = 0.95 * 0.85
+        x = c * (1.0 - abs((h / 60.0) % 2.0 - 1.0))
+        m = 0.95 - c
+        if 0 <= h < 60: r, g, b = c, x, 0
+        elif 60 <= h < 120: r, g, b = x, c, 0
+        elif 120 <= h < 180: r, g, b = 0, c, x
+        elif 180 <= h <= 240: r, g, b = 0, x, c
+        else: r, g, b = c, 0, c
+        return f"#{int((r+m)*255):02x}{int((g+m)*255):02x}{int((b+m)*255):02x}"
 
     def redraw(self):
         if self.mode_var.get() == "2D": self.draw_2d_grid()
