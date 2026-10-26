@@ -44,19 +44,59 @@
 
 ## 🚀 使い方
 
-今後実装が進んだ際の使用方法のイメージです。
+`main.py` はコマンドライン引数による直接実行および対話式メニューに対応しています。
 
-### 1. データの測定・記録
-位置情報と紐づけて磁束密度を測定し、CSVに記録します。
+### 0. 対話メニューで起動（初心者向け）
+引数なしで実行するとメニューが表示され、キーボード選択で各機能を実行できます。
 ```bash
-python main.py --mode record
+python main.py
 ```
 
-### 2. 磁力線の可視化
-記録されたデータを読み込み、3Dグラフとして可視化します。
+### 1. センサーのキャリブレーション確認
+測定前にBNO055のキャリブレーション状態（Sys/Gyro/Accel/Mag: 0〜3）を確認します。
 ```bash
-python main.py --mode visualize
+python main.py calibrate
+# または: python main.py --mode calibrate
 ```
+
+### 2. データの測定・記録 (Record)
+位置情報と紐づけて磁束密度を測定し、CSVに記録します。途中で中断したい場合は `Ctrl+C` を押すと安全に保存を完了します。
+
+- **慣性航法（デッドレコニング）モード**（推奨: 加速度・姿勢クォータニオンから位置を自動推定）:
+  ```bash
+  python main.py record
+  # または: python main.py --mode record
+  ```
+- **グリッド走査モード**（指定した列×行のグリッド上を走査）:
+  ```bash
+  python main.py record -t grid --cols 10 --rows 10
+  ```
+- **マニュアル測定モード**（Enterキーを押すたびに1点サンプリング）:
+  ```bash
+  python main.py record -t manual
+  ```
+- **オプション指定例**（サンプル数変更、出力ファイル指定、モック実行）:
+  ```bash
+  python main.py record -o data/my_experiment.csv -s 10 --mock
+  ```
+
+### 3. リアルタイム・センサーモニター (Monitor)
+現在の磁束密度・加速度・クォータニオン・推定位置をリアルタイムにターミナル表示します。
+```bash
+python main.py monitor
+```
+
+### 4. 磁力線の可視化 (Visualize)
+記録されたCSVデータを読み込み、2Dヒートマップおよび3D磁力線ベクトル場として可視化します。
+```bash
+python main.py visualize
+# または: python main.py --mode visualize
+
+# 任意のCSVファイルを指定して可視化:
+python main.py visualize -f data/my_experiment.csv
+```
+※ SSH接続等でGUI画面がない場合は、コンソール上にデータサマリーが表示されます。
+
 
 ---
 
