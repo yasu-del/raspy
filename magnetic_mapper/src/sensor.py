@@ -31,7 +31,7 @@ _QUA_SCALE          = 16384.0  # 1.0 = 2^14 LSB
 _MODE_SWITCH_DELAY  = 2.0
 
 # ── 精度設定（慣性航法はノイズが2回積分で増幅されるため）──────────
-FILTER_WINDOW = 5      # 移動平均のサンプル数
+FILTER_WINDOW = 10      # 移動平均のサンプル数
 DEAD_ZONE_ACC = 0.12   # [m/s^2] これ未満の加速度は 0 とみなす（静止時ドリフト防止）
 MIN_CALIB_SYS = 2      # この値未満のシステムキャリブレーションでは None を返す
 
