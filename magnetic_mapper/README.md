@@ -9,7 +9,8 @@
 * `magnetic_mapper/`
   * `data/` : 測定したCSVデータやキャリブレーション結果の保存先。
   * `src/` : ソースコードディレクトリ。
-    * `sensor.py` : センサー制御・データ取得処理。
+    * `sensor.py` : センサー制御・キャリブレーション保存/復元・データ取得処理。
+    * `tracker.py` : 台形積分・高速バックグラウンド追跡による位置推定。
     * `recorder.py` : 位置と磁気データの記録処理。
     * `visualizer.py` : 磁力線やベクトル場の可視化処理。
   * `main.py` : プログラムのメイン実行ファイル（エントリーポイント）。
@@ -52,64 +53,65 @@
 python main.py
 ```
 
-### 1. センサーのキャリブレーション確認
+### 1. センサーのキャリブレーション確認とプロファイル保存
 測定前にBNO055のキャリブレーション状態（Sys/Gyro/Accel/Mag: 0〜3）を確認します。
+キャリブレーション完了後、オフセット設定を `data/bno055_calib_profile.json` に保存でき、次回以降自動ロードされます。
 ```bash
 python main.py calibrate
-# または: python main.py --mode calibrate
 ```
 
-### 2. データの測定・記録 (Record)
+### 2. 環境磁界のゼロ点補正 (Tare)
+地磁気や室内の金属による定常環境磁界をあらかじめ測定・記憶し、測定値から自動で引き算（対象物の純粋な磁界を抽出）します。
+```bash
+python main.py tare
+```
+
+### 3. データの測定・記録 (Record)
 位置情報と紐づけて磁束密度を測定し、CSVに記録します。途中で中断したい場合は `Ctrl+C` を押すと安全に保存を完了します。
 
-- **慣性航法（デッドレコニング）モード**（推奨: 加速度・姿勢クォータニオンから位置を自動推定）:
-  ```bash
-  python main.py record
-  # または: python main.py --mode record
-  ```
-- **グリッド走査モード**（指定した列×行のグリッド上を走査）:
-  ```bash
-  python main.py record -t grid --cols 10 --rows 10
-  ```
-- **マニュアル測定モード**（Enterキーを押すたびに1点サンプリング）:
+- **マニュアル測定モード**（**高精度・推奨**: 方眼紙等のマーク位置にセンサーを置いてEnterキーでサンプリング）:
   ```bash
   python main.py record -t manual
   ```
-- **オプション指定例**（サンプル数変更、出力ファイル指定、モック実行）:
+- **グリッド走査モード**（治具や固定間隔マス目上を規則正しく測定）:
   ```bash
-  python main.py record -o data/my_experiment.csv -s 10 --mock
+  python main.py record -t grid --cols 10 --rows 10
+  ```
+- **慣性航法モード**（50Hz高速バックグラウンドスレッドで加速度・姿勢を台形積分追跡）:
+  ```bash
+  python main.py record -t tracker
+  ```
+- **オプション指定例**（Tare実行、サンプル数7回、出力先指定）:
+  ```bash
+  python main.py record -t manual --tare -s 7 -o data/experiment_01.csv
   ```
 
-### 3. リアルタイム・センサーモニター (Monitor)
+### 4. リアルタイム・センサーモニター (Monitor)
 現在の磁束密度・加速度・クォータニオン・推定位置をリアルタイムにターミナル表示します。
 ```bash
 python main.py monitor
 ```
 
-### 4. 磁力線の可視化 (Visualize)
+### 5. 磁力線の可視化 (Visualize)
 記録されたCSVデータを読み込み、2Dヒートマップおよび3D磁力線ベクトル場として可視化します。
 ```bash
 python main.py visualize
-# または: python main.py --mode visualize
 
 # 任意のCSVファイルを指定して可視化:
-python main.py visualize -f data/my_experiment.csv
+python main.py visualize -f data/experiment_01.csv
 ```
 ※ SSH接続等でGUI画面がない場合は、コンソール上にデータサマリーが表示されます。
 
-
 ---
 
-## 📊 記録データのフォーマット (data/magnetic_data.csv)
+## 🎯 測定誤差を最小にするためのポイント
 
-保存されるデータは以下のカラム（ヘッダー）を持つCSVファイルを想定しています。
-
-| カラム名 | 説明 | 単位 |
-| :--- | :--- | :--- |
-| `timestamp` | 測定した時間（UNIX時間など） | 秒 |
-| `x_pos` | 測定した空間上のX座標 | mm または m |
-| `y_pos` | 測定した空間上のY座標 | mm または m |
-| `z_pos` | 測定した空間上のZ座標 | mm または m |
-| `mag_x` | X軸方向の磁束密度 | $\mu\text{T}$ (マイクロテスラ) |
-| `mag_y` | Y軸方向 of 磁束密度 | $\mu\text{T}$ (マイクロテスラ) |
-| `mag_z` | Z軸方向 of 磁束密度 | $\mu\text{T}$ (マイクロテスラ) |
+1. **測定方式の選択**:
+   - 慣性航法（IMU単独のデッドレコニング）は、MEMSセンサーの物理的限界により時間とともに位置ドリフトが生じます。
+   - **ミリ単位の正確な空間マッピングを行いたい場合は、マニュアル測定 (`-t manual`) またはグリッド測定 (`-t grid`) を推奨します**。
+2. **センサーモード (NDOF_FMC_OFF)**:
+   - 強力な磁石を近づけた際にBNO055が勝手にオフセットを再計算して値が歪むのを防止するため、本システムは自動キャリブレーションを停止したモードで測定を行います。
+3. **事前に8の字キャリブレーションを実行**:
+   - 測定前に必ず `python main.py calibrate` で `Mag: 3/3` にし、プロファイルを保存してください。
+4. **ゼロ点補正 (Tare) の活用**:
+   - 測定対象（磁石など）を近づける前に `--tare` オプションを実行して地磁気成分を相殺することで、測定対象のみの磁界を正確に抽出できます。
