@@ -44,7 +44,7 @@ class PositionTracker:
         # 静止判定の閾値 [m/s^2]
         # 加速度のノルム（大きさ）がこの値以下のとき、センサーは静止していると見なし
         # 速度を 0 にリセットする（ドリフト誤差の蓄積を軽減するため）
-        self.zero_velocity_threshold = 0.05
+        self.zero_velocity_threshold = 0.12
 
     def update_position(self, accel, quaternion, timestamp=None):
         """加速度とクォータニオンから位置を更新し、現在の推定座標を返す。
@@ -100,6 +100,12 @@ class PositionTracker:
         self._vel_x += world_accel[0] * dt
         self._vel_y += world_accel[1] * dt
         self._vel_z += world_accel[2] * dt
+
+        # ★★★ ここに2行追加！速度の減衰（摩擦）を入れる ★★★
+        DAMPING = 0.90  # 毎フレーム10%ずつ速度をブレーキする
+        self._vel_x *= DAMPING
+        self._vel_y *= DAMPING
+        self._vel_z *= DAMPING
 
         # ステップ4: 速度を積分して位置を更新する
         self.pos_x += self._vel_x * dt
